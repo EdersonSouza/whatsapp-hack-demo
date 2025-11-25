@@ -14,7 +14,89 @@ let connectedHackers = [];
 
 // Servir páginas estáticas
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'vitima.html'));
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Demo Educacional - Golpe WhatsApp</title>
+            <style>
+                body { 
+                    font-family: Arial, sans-serif; 
+                    max-width: 800px; 
+                    margin: 0 auto; 
+                    padding: 20px; 
+                    background: #f5f5f5;
+                }
+                .container { 
+                    background: white; 
+                    padding: 30px; 
+                    border-radius: 10px; 
+                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                }
+                h1 { color: #25D366; }
+                .card { 
+                    background: #e8f4fd; 
+                    padding: 20px; 
+                    margin: 15px 0; 
+                    border-radius: 8px; 
+                    border-left: 4px solid #25D366;
+                }
+                .btn { 
+                    display: inline-block; 
+                    background: #25D366; 
+                    color: white; 
+                    padding: 12px 24px; 
+                    text-decoration: none; 
+                    border-radius: 6px; 
+                    margin: 5px; 
+                    font-weight: bold;
+                }
+                .btn:hover { background: #128C7E; }
+                .warning { 
+                    background: #fff3cd; 
+                    border: 1px solid #ffc107; 
+                    color: #856404; 
+                    padding: 15px; 
+                    border-radius: 6px; 
+                    margin: 20px 0;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🚨 Demonstração Educacional - Golpe do WhatsApp</h1>
+                
+                <div class="warning">
+                    <strong>⚠️ AVISO:</strong> Esta é uma ferramenta educacional para conscientização sobre segurança digital.
+                </div>
+                
+                <div class="card">
+                    <h2>📱 Página da Vítima</h2>
+                    <p>Simula a página falsa onde as vítimas digitam o código</p>
+                    <a href="/vitima" class="btn">Acessar Página da Vítima</a>
+                </div>
+                
+                <div class="card">
+                    <h2>🕵️ Painel do Hacker</h2>
+                    <p>Mostra em tempo real os códigos capturados (para o palestrante)</p>
+                    <a href="/hacker" class="btn">Acessar Painel do Hacker</a>
+                </div>
+                
+                <div class="card">
+                    <h3>🎯 Como usar na palestra:</h3>
+                    <ol>
+                        <li>Abra o <strong>Painel do Hacker</strong> no projetor</li>
+                        <li>Envie o link da <strong>Página da Vítima</strong> para a plateia</li>
+                        <li>Peça para digitarem códigos de 6 dígitos</li>
+                        <li>Mostre em tempo real no painel</li>
+                    </ol>
+                </div>
+                
+                <p><strong>👨‍💻 Desenvolvido por:</strong> Ederson Heleno de Souza</p>
+            </div>
+        </body>
+        </html>
+    `);
 });
 
 app.get('/vitima', (req, res) => {
